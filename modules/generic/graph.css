@@ -1,0 +1,89 @@
+:root {											/* https://www.hexcolortool.com/ */
+	--navbar-color: #333;
+	--gradient-top-color: #333;
+	--gradient-bottom-color: #333;
+
+	--button-color: #333;
+	--border-color: #444;
+	--hover-color: #FFF;
+}
+
+body {
+	background: #f1f1f1;
+}
+
+
+/* DO NOT EDIT FROM HERE --------------------------------------------------------------------------------------- */
+
+
+footer {
+	background: var(--navbar-color);
+	padding: 15px;
+}
+
+.navbar {
+	min-height: 80px;
+
+	background: var(--navbar-color);
+
+	background: -webkit-linear-gradient(bottom, var(--gradient-top-color), var(--gradient-bottom-color)); /*Safari 5.1-6*/
+	background: -o-linear-gradient(bottom, var(--gradient-top-color), var(--gradient-bottom-color)); /*Opera 11.1-12*/
+	background: -moz-linear-gradient(bottom, var(--gradient-top-color), var(--gradient-bottom-color)); /*Fx 3.6-15*/
+	background: linear-gradient(to bottom, var(--gradient-top-color), var(--gradient-bottom-color)); /*Standard*/
+}
+
+.navbar_paragraph {
+	color: #FFF;
+	margin-top: 5px;
+	margin-bottom: 0px;
+	margin-left: 0px;
+	margin-right: 0px;
+	font-size: 12px;
+}
+
+.navbar_span_right {
+	color: #FFF;
+	/*font-size: 12px;*/
+}
+
+/* if screen is too small hide the span */
+@media screen and (max-width: 540px) {
+	.navbar_span_right {
+		display: none !important;
+	}
+}
+
+.footer_paragraph {
+	margin: 0px;
+	color: #FFF;
+	font-size: 12px;
+}
+
+.card {
+	margin-top: 20px;
+	margin-bottom: 20px;
+}
+
+/*/////////////////////////////////////////////*/
+
+.btn {
+	background-color: var(--button-color);
+	border-color: var(--border-color);
+	color: #FFF;
+}
+
+.btn:hover {
+	color: var(--hover-color);
+	-webkit-filter: brightness(80%);
+}
+
+.btn:active {
+	background-color: var(--border-color);
+	color: var(--hover-color);
+}
+
+/*/////////////////////////////////////////////*/
+
+
+/* ------------------------------------------------------------------------------------------------------------- */
+/* .navbar-nav > li > a { } */
